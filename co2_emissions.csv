@@ -1,0 +1,36 @@
+import sqlite3
+
+# Connect to SQLite database (it will create the database if it doesn't exist)
+conn = sqlite3.connect('co2_emissions.db')
+cursor = conn.cursor()
+
+# Create table for countries
+cursor.execute('''CREATE TABLE IF NOT EXISTS countries (
+                    id INTEGER PRIMARY KEY, 
+                    country_name TEXT)''')
+
+# Create table for emissions
+cursor.execute('''CREATE TABLE IF NOT EXISTS emissions (
+                    id INTEGER PRIMARY KEY,
+                    country_id INTEGER,
+                    co2_emission REAL,
+                    year_change REAL,
+                    population INTEGER,
+                    per_capita REAL,
+                    share_of_world REAL,
+                    FOREIGN KEY(country_id) REFERENCES countries(id))''')
+
+# Insert the data into the tables
+for index, row in df.iterrows():
+    # Insert country into the countries table
+    cursor.execute('''INSERT INTO countries (country_name) VALUES (?)''', (row['Country'],))
+    country_id = cursor.lastrowid
+    
+    # Insert emissions data into the emissions table
+    cursor.execute('''INSERT INTO emissions (country_id, co2_emission, year_change, population, per_capita, share_of_world) 
+                      VALUES (?, ?, ?, ?, ?, ?)''', 
+                   (country_id, row['CO2 Emissions'], row['Year Change'], row['Population'], row['Per Capita'], row['Share of World']))
+
+# Commit the transaction and close the connection
+conn.commit()
+conn.close()
